@@ -3,7 +3,7 @@ name = "intro-to-rag"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "philippedm",email = "philippe.demeulenaer@northell.com"}
+    {name = "pdemeulenaer",email = "pdemeulenaer@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.11,<4.0"
@@ -19,7 +19,12 @@ dependencies = [
     "langchain-openai (>=0.3.7,<0.4.0)",
     "langchain-groq (>=0.2.4,<0.3.0)",
     "ipykernel (>=6.29.5,<7.0.0)",
-    "jupyter (>=1.1.1,<2.0.0)"
+    "jupyter (>=1.1.1,<2.0.0)",
+    "pypdf2 (>=3.0.1,<4.0.0)",
+    "streamlit (>=1.43.2,<2.0.0)",
+    "faiss-cpu (>=1.10.0,<2.0.0)",
+    "altair (>=5.5.0,<6.0.0)",
+    "sentence-transformers (>=3.4.1,<4.0.0)"
 ]
 
 [tool.poetry]
