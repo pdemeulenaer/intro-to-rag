@@ -5,15 +5,17 @@ RUN apt-get update && apt-get install -y \
     poppler-utils \
     tesseract-ocr \
     libmagic1 \
+    libgl1-mesa-glx \
+    libglib2.0-0 \    
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
-# # Copy only the requirements first to leverage Docker cache
-# COPY pyproject.toml poetry.lock* ./
-# Copy the whole project
-COPY . .
+# Copy only the requirements first to leverage Docker cache
+COPY pyproject.toml poetry.lock* ./
+# # Copy the whole project
+# COPY . .
 
 # Install poetry
 RUN pip install poetry
@@ -22,8 +24,8 @@ RUN pip install poetry
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi --no-root
 
-# # Copy the rest of the application
-# COPY . .
+# Copy the rest of the application
+COPY . .
 
 # Expose port for Streamlit
 EXPOSE 8501
