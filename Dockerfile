@@ -1,0 +1,33 @@
+FROM python:3.11-slim
+
+# Install system dependencies required by unstructured[all-docs]
+RUN apt-get update && apt-get install -y \
+    poppler-utils \
+    tesseract-ocr \
+    libmagic1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy only the requirements first to leverage Docker cache
+COPY pyproject.toml poetry.lock* ./
+
+# Install poetry
+RUN pip install poetry
+
+# Install dependencies
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi
+
+# Copy the rest of the application
+COPY . .
+
+# Expose port for Streamlit
+EXPOSE 8501
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+
+# Command to run the Streamlit app
+CMD ["poetry", "run", "streamlit", "run", "app-rag-conversation/app.py", "--server.address=0.0.0.0"]

@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+venv
+.env
+*.pt
+*.pth
+*.safetensors
+*.bin
+
+# Development
+.vscode
+.idea
+*.swp
+*.swo
+
+# Project specific
+mlflow_artifacts/
+mlruns/
+.pytest_cache
+.coverage
+htmlcov
