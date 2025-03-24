@@ -99,7 +99,7 @@ def get_conversation_chain(vectorstore):
 
     llm = ChatGroq(
         groq_api_key = groq_api_key,
-        model_name="mixtral-8x7b-32768",  # Example model; check Groq’s docs for available options
+        model_name="llama3-8b-8192" , #"mixtral-8x7b-32768" is deprecated,  # Example model; check Groq’s docs for available options
         temperature=0.5
     )
     
