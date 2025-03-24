@@ -11,3 +11,8 @@ Content:
 **app-rag-conversation**: Streamlit app to upload multiple PDFs and have a conversation with it (i.e. using memory)
 
 langchain_multimodal.ipynb: multi-modal RAG, i.e. extracting text, images from a PDF (using unstructured) and converting the documents into embeddings (using Chroma as vector store)
+
+**Docker image**: to create & run it:
+
+* docker build -t rag-app .
+* docker run -p 8501:8501 --env-file .env rag-app

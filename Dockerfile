@@ -10,18 +10,20 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy only the requirements first to leverage Docker cache
-COPY pyproject.toml poetry.lock* ./
+# # Copy only the requirements first to leverage Docker cache
+# COPY pyproject.toml poetry.lock* ./
+# Copy the whole project
+COPY . .
 
 # Install poetry
 RUN pip install poetry
 
 # Install dependencies
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+    && poetry install --no-interaction --no-ansi --no-root
 
-# Copy the rest of the application
-COPY . .
+# # Copy the rest of the application
+# COPY . .
 
 # Expose port for Streamlit
 EXPOSE 8501
