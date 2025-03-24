@@ -7,7 +7,7 @@ from langchain.embeddings import HuggingFaceEmbeddings  # Replace OpenAIEmbeddin
 from langchain.vectorstores import FAISS
 # from langchain.chat_models import ChatOpenAI
 # from langchain_huggingface import ChatHuggingFace, HuggingFacePipeline
-# from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
