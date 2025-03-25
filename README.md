@@ -14,5 +14,5 @@ langchain_multimodal.ipynb: multi-modal RAG, i.e. extracting text, images from a
 
 **Docker image**: to create & run it:
 
-* docker build -t rag-app .
-* docker run -p 8501:8501 --env-file .env rag-app
+* docker build -t rag-app:0.0.1 .
+* docker run -p 8501:8501 --env-file .env rag-app:0.0.1
