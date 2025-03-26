@@ -2,8 +2,8 @@ FROM python:3.11-slim
 
 # Install system dependencies required by unstructured[all-docs]
 RUN apt-get update && apt-get install -y \
-    poppler-utils \
-    tesseract-ocr \
+    # poppler-utils \
+    # tesseract-ocr \
     libmagic1 \
     libgl1-mesa-glx \
     libglib2.0-0 \    
@@ -22,7 +22,8 @@ RUN pip install poetry
 
 # Install dependencies
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi --no-root
+    && poetry install --no-interaction --no-ansi --no-root \
+    && rm -rf /root/.cache/pip
 
 # Copy the rest of the application
 COPY . .
@@ -34,4 +35,4 @@ EXPOSE 8501
 ENV PYTHONUNBUFFERED=1
 
 # Command to run the Streamlit app
-CMD ["poetry", "run", "streamlit", "run", "app-rag-conversation/app.py", "--server.address=0.0.0.0"]
+CMD ["poetry", "run", "streamlit", "run", "app.py", "--server.address=0.0.0.0"]

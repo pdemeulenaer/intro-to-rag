@@ -1,20 +1,33 @@
+# import streamlit as st
+# from dotenv import load_dotenv
+# from PyPDF2 import PdfReader
+# from langchain.text_splitter import CharacterTextSplitter
+# from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
+# from langchain.embeddings import HuggingFaceEmbeddings  # Replace OpenAIEmbeddings
+# from langchain.vectorstores import FAISS
+# # from langchain.chat_models import ChatOpenAI
+# # from langchain_huggingface import ChatHuggingFace, HuggingFacePipeline
+# from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+# from langchain_groq import ChatGroq
+# from langchain.memory import ConversationBufferMemory
+# from langchain.chains import ConversationalRetrievalChain
+# from htmlTemplates import css, bot_template, user_template
+# from langchain_community.llms import HuggingFaceHub
+# from dotenv import load_dotenv
+# import os
+
+import os
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
-from langchain.embeddings import HuggingFaceEmbeddings  # Replace OpenAIEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
-# from langchain.chat_models import ChatOpenAI
-# from langchain_huggingface import ChatHuggingFace, HuggingFacePipeline
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
-from langchain_community.llms import HuggingFaceHub
-from dotenv import load_dotenv
-import os
 
 
 def get_pdf_text(pdf_docs):

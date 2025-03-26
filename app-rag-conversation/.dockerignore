@@ -1,5 +1,6 @@
 # Git
 .git
+.git/
 .gitignore
 
 # Python
@@ -28,3 +29,4 @@ mlruns/
 .pytest_cache
 .coverage
 htmlcov
+content/
