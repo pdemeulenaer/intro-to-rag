@@ -15,8 +15,7 @@ dependencies = [
     "pypdf2 (>=3.0.1,<4.0.0)",
     "streamlit (>=1.43.2,<2.0.0)",
     "faiss-cpu (>=1.10.0,<2.0.0)",
-    "sentence-transformers (>=3.4.1,<4.0.0)",
-    "torch (>=2.6.0,<3.0.0)",
+    "huggingface-hub (>=0.29.3,<0.30.0)",
 ]
 
 [tool.poetry]
