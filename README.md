@@ -6,9 +6,9 @@ This repo is massively inspired by
 
 Content:
 
-**app-one-pdf**: Streamlit app to query one PDF and store the vector in Qdrant Cloud
+**app-one-pdf**: Streamlit app to query one PDF and store the vector in Qdrant Cloud (local test mode yet)
 
-**app-rag-conversation**: Streamlit app to upload multiple PDFs and have a conversation with it (i.e. using memory)
+**app-rag-conversation**: Dockerized Streamlit app to upload multiple PDFs and have a conversation with it (i.e. using memory)
 
 langchain_multimodal.ipynb: multi-modal RAG, i.e. extracting text, images from a PDF (using unstructured) and converting the documents into embeddings (using Chroma as vector store)
 
@@ -16,5 +16,6 @@ langchain_multimodal.ipynb: multi-modal RAG, i.e. extracting text, images from a
 
 * docker build -t rag-app:0.0.1 .
 * docker run -p 8501:8501 --env-file .env rag-app:0.0.1
+* docker image tag rag-app:0.0.1 pdemeulenaer/rag-app:0.0.1
 * docker login
 * docker image push pdemeulenaer/rag-app:0.0.1
