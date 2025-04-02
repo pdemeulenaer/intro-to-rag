@@ -17,6 +17,7 @@ dependencies = [
     "faiss-cpu (>=1.10.0,<2.0.0)",
     "huggingface-hub (>=0.29.3,<0.30.0)",
     "gradio (>=5.23.2,<6.0.0)",
+    "taipy (>=4.0.2,<5.0.0)",
 ]
 
 [tool.poetry]
