@@ -13,6 +13,13 @@ from langchain.chains import ConversationalRetrievalChain
 
 
 def get_pdf_text(pdf_docs):
+    """
+    Extract text from a list of PDF documents.
+
+    Caveats:
+    * No structure preservation — things like headings, paragraphs, tables, or bullet lists are flattened.
+    * No cleaning of noisy OCR or page breaks.
+    """
     text = ""
     for pdf in pdf_docs:
         pdf_reader = PdfReader(pdf)
@@ -22,6 +29,13 @@ def get_pdf_text(pdf_docs):
 
 
 def get_text_chunks(text):
+    """
+    Split text into chunks for embedding.
+    
+    Caveats:
+    * Naive chunk boundaries: chunks might cut off mid-sentence or mid-thought.
+    * Treats all line breaks equally — which ignores paragraph or section logic.
+    """
     text_splitter = CharacterTextSplitter(
         separator="\n",
         chunk_size=1000,
