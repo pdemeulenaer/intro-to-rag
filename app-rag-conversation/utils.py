@@ -1,5 +1,6 @@
 import os
 from PyPDF2 import PdfReader
+import fitz # pymupdf
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import FAISS
 from huggingface_hub import InferenceClient
@@ -12,20 +13,34 @@ from langchain.chains import ConversationalRetrievalChain
 
 
 
+# def get_pdf_text(pdf_docs):
+#     """
+#     Extract text from a list of PDF documents.
+
+#     Caveats:
+#     * No structure preservation — things like headings, paragraphs, tables, or bullet lists are flattened.
+#     * No cleaning of noisy OCR or page breaks.
+#     """
+#     text = ""
+#     for pdf in pdf_docs:
+#         pdf_reader = PdfReader(pdf)
+#         for page in pdf_reader.pages:
+#             text += page.extract_text()
+#     return text
+
 def get_pdf_text(pdf_docs):
     """
-    Extract text from a list of PDF documents.
+    Based on PyMuPDF (fitz) for better text extraction then PyPDF2.
+    Source: https://pymupdf.readthedocs.io/en/latest/the-basics.html
 
-    Caveats:
-    * No structure preservation — things like headings, paragraphs, tables, or bullet lists are flattened.
-    * No cleaning of noisy OCR or page breaks.
+    See in there how to expand on other document types and images
     """
     text = ""
     for pdf in pdf_docs:
-        pdf_reader = PdfReader(pdf)
-        for page in pdf_reader.pages:
-            text += page.extract_text()
-    return text
+        with fitz.open(stream=pdf.read(), filetype="pdf") as doc:
+            for page in doc:
+                text += page.get_text()
+    return text  
 
 
 def get_text_chunks_naive(text):
