@@ -1,7 +1,7 @@
 import os
-from PyPDF2 import PdfReader
+# from PyPDF2 import PdfReader
 import pymupdf
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from huggingface_hub import InferenceClient
 from langchain.embeddings import HuggingFaceEmbeddings
@@ -45,7 +45,7 @@ def get_pdf_text(pdf_docs):
 
 def get_text_chunks_naive(text):
     """
-    Split text into chunks for embedding.
+    Split text into chunks for embedding using LangChain CharacterTextSplitter
     
     Caveats:
     * Naive chunk boundaries: chunks might cut off mid-sentence or mid-thought.
@@ -59,6 +59,19 @@ def get_text_chunks_naive(text):
     )
     chunks = text_splitter.split_text(text)
     return chunks
+
+def get_text_chunks_recursive(text):
+    """
+    Split text into chunks for embedding using LangChain RecursiveCharacterTextSplitter
+    
+    Caveats:
+    """
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=10000,
+        chunk_overlap=2000,
+        separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""]
+    )
+    return splitter.split_text(text)
 
 
 # def get_vectorstore(text_chunks):
@@ -191,7 +204,8 @@ def get_conversation_chain(vectorstore):
 
     llm = ChatGroq(
         groq_api_key = groq_api_key,
-        model_name="llama3-8b-8192" , #"mixtral-8x7b-32768" is deprecated,  # Example model; check Groq’s docs for available options
+        # model_name="llama3-8b-8192" , #"mixtral-8x7b-32768" is deprecated,  # Example model; check Groq’s docs for available options
+        model_name="llama-3.3-70b-versatile", # longer context: 128K
         temperature=0.5
     )
     
