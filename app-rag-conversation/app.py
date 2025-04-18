@@ -65,7 +65,7 @@ def main():
                 raw_text = get_pdf_text(pdf_docs)
 
                 # get the text chunks
-                text_chunks = get_text_chunks(raw_text)
+                text_chunks = get_text_chunks_naive(raw_text)
 
                 # create vector store
                 vectorstore = get_vectorstore(text_chunks)

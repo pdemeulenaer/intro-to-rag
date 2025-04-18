@@ -28,7 +28,7 @@ def get_pdf_text(pdf_docs):
     return text
 
 
-def get_text_chunks(text):
+def get_text_chunks_naive(text):
     """
     Split text into chunks for embedding.
     
