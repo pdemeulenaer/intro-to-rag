@@ -1,6 +1,6 @@
 import os
 from PyPDF2 import PdfReader
-import fitz # pymupdf
+import pymupdf
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import FAISS
 from huggingface_hub import InferenceClient
@@ -30,17 +30,17 @@ from langchain.chains import ConversationalRetrievalChain
 
 def get_pdf_text(pdf_docs):
     """
-    Based on PyMuPDF (fitz) for better text extraction then PyPDF2.
+    Based on PyMuPDF for better text extraction then PyPDF2.
     Source: https://pymupdf.readthedocs.io/en/latest/the-basics.html
 
     See in there how to expand on other document types and images
     """
     text = ""
     for pdf in pdf_docs:
-        with fitz.open(stream=pdf.read(), filetype="pdf") as doc:
+        with pymupdf.open(stream=pdf.read(), filetype="pdf") as doc:
             for page in doc:
                 text += page.get_text()
-    return text  
+    return text
 
 
 def get_text_chunks_naive(text):
