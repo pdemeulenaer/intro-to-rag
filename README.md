@@ -10,6 +10,8 @@ Content:
 
 **app-rag-conversation**: Dockerized Streamlit app to upload multiple PDFs and have a conversation with it (i.e. using memory)
 
+**app-rag-db**: (WIP) Dockerized Streamlit app to (1) upload folder containing many PDFs into Qdrant VS database and (2) query the VS database
+
 langchain_multimodal.ipynb: multi-modal RAG, i.e. extracting text, images from a PDF (using unstructured) and converting the documents into embeddings (using Chroma as vector store)
 
 **Docker image**: to create & run it:
@@ -19,3 +21,4 @@ langchain_multimodal.ipynb: multi-modal RAG, i.e. extracting text, images from a
 * docker image tag rag-app:0.0.1 pdemeulenaer/rag-app:0.0.1
 * docker login
 * docker image push pdemeulenaer/rag-app:0.0.1
+
