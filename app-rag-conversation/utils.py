@@ -6,6 +6,9 @@ from langchain.vectorstores import FAISS
 from huggingface_hub import InferenceClient
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings import HuggingFaceInferenceAPIEmbeddings
+from typing import List
+from huggingface_hub import InferenceClient
+from langchain.embeddings.base import Embeddings
 # from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferMemory
@@ -74,6 +77,18 @@ def get_text_chunks_recursive(text):
     return splitter.split_text(text)
 
 
+# Custom multimodal embedding wrapper
+class HFCLIPTextEmbedding(Embeddings):
+    def __init__(self, model_name: str, api_token: str):
+        self.client = InferenceClient(model=model_name, token=api_token)
+    
+    def embed_query(self, text: str) -> List[float]:
+        return self.client.feature_extraction(text)
+    
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        return [self.embed_query(t) for t in texts]
+
+
 # def get_vectorstore(text_chunks):
 #     # embeddings = OpenAIEmbeddings()
 #     # embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl") # said to be better than OpenAIEmbeddings
@@ -124,17 +139,26 @@ def get_vectorstore(text_chunks):
     # List of models to try in order
     models_to_try = [
         # "intfloat/e5-base-v2",
-        "sentence-transformers/all-MiniLM-L6-v2"
+        "sentence-transformers/clip-ViT-B-32",  # Primary model HF API NOT WORKING AS OF NOW
+        "laion/CLIP-ViT-B-32-laion2B-s34B-b79K",  # Fallback model HF API NOT WORKING AS OF NOW
+        "openai/clip-vit-base-patch32",  # Another fallback HF API NOT WORKING AS OF NOW
+        "sentence-transformers/all-MiniLM-L6-v2" # embedding model for TEXT ONLY        
     ]
     
     # Try each model until one works
     for model_name in models_to_try:
         try:
-            # Use LangChain's built-in Hugging Face Inference API Embeddings
-            embeddings = HuggingFaceInferenceAPIEmbeddings(
-                api_key=os.environ['HUGGINGFACE_API_TOKEN'],
-                model_name=model_name
-            )
+            # # Use LangChain's built-in Hugging Face Inference API Embeddings
+            # embeddings = HuggingFaceInferenceAPIEmbeddings(
+            #     api_key=os.environ['HUGGINGFACE_API_TOKEN'],
+            #     model_name=model_name
+            # )
+
+            # Use HuggingFaceHub directly
+            embeddings = HFCLIPTextEmbedding(
+                model_name=model_name,
+                api_token=os.environ['HUGGINGFACE_API_TOKEN']
+            )        
             
             # Create and return FAISS vector store
             vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
