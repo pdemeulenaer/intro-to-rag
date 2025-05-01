@@ -140,8 +140,8 @@ def get_vectorstore(text_chunks):
     models_to_try = [
         # "intfloat/e5-base-v2",
         "sentence-transformers/clip-ViT-B-32",  # Primary model HF API NOT WORKING AS OF NOW
-        "laion/CLIP-ViT-B-32-laion2B-s34B-b79K",  # Fallback model HF API NOT WORKING AS OF NOW
-        "openai/clip-vit-base-patch32",  # Another fallback HF API NOT WORKING AS OF NOW
+        "laion/CLIP-ViT-B-32-laion2B-s34B-b79K", # Fallback model HF API NOT WORKING AS OF NOW
+        "openai/clip-vit-base-patch32", # Another fallback HF API NOT WORKING AS OF NOW
         "Salesforce/blip-image-captioning-base", # Another fallback HF API NOT WORKING AS OF NOW
         "sentence-transformers/all-MiniLM-L6-v2" # embedding model for TEXT ONLY        
     ]

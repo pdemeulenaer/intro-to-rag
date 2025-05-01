@@ -1,5 +1,5 @@
 [project]
-name = "intro-to-rag"
+name = "app-rag-conversation"
 version = "0.1.0"
 description = ""
 authors = [
@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "intro_to_rag", from = "src"}]
+packages = [{include = "app_rag_conversation", from = "src"}]
 
 
 [build-system]

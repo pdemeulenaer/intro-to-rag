@@ -1,7 +1,21 @@
 [project]
-name = "intro-to-rag"
+name = "app-rag-db"
+# dynamic = ["version"]
 version = "0.1.0"
-description = ""
+description = "A demo RAG for LangChain and Groq"
+readme-content-type = "text/markdown"
+keywords = [
+    "langchain",
+    "groq",
+    "rag",
+    "retrieval-augmented-generation",
+    "streamlit",
+    "faiss",
+    "huggingface",
+    "pymupdf"
+]
+license = {text = "MIT"}
+# homepage = "
 authors = [
     {name = "pdemeulenaer",email = "pdemeulenaer@gmail.com"}
 ]
@@ -20,7 +34,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "intro_to_rag", from = "src"}]
+packages = [{include = "app_rag_db", from = "src"}]
 
 
 [build-system]
