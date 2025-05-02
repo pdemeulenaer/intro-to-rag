@@ -132,25 +132,25 @@ def ingest_folder_to_qdrant(folder_path, qdrant_url, qdrant_api_key, collection_
         file_hash = get_file_hash(filepath)
 
         # Check if hash already in Qdrant
-        # existing = qdrant_client.scroll(
-        #     collection_name=collection_name,
-        #     filter={
-        #         "must": [{"key": "file_hash", "match": {"value": file_hash}}]
-        #     },
-        #     limit=1
-        # )
         existing = qdrant_client.scroll(
             collection_name=collection_name,
-            scroll_filter=Filter(
-                must=[
-                    FieldCondition(
-                        key="file_hash",
-                        match=MatchValue(value=file_hash)
-                    )
-                ]
-            ),
+            scroll_filter={
+                "must": [{"key": "file_hash", "match": {"value": file_hash}}]
+            },
             limit=1
         )
+        # existing = qdrant_client.scroll(
+        #     collection_name=collection_name,
+        #     scroll_filter=Filter(
+        #         must=[
+        #             FieldCondition(
+        #                 key="file_hash",
+        #                 match=MatchValue(value=file_hash)
+        #             )
+        #         ]
+        #     ),
+        #     limit=1
+        # )
         # print(f"Scroll result for {filename} (hash: {file_hash}): {existing}")
 
         if existing[0]:
