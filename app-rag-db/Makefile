@@ -39,6 +39,9 @@ quality: black lint test
 
 quality-ci: lint test
 
+ingest:
+	poetry run python -m src.app_rag_db.ingest_to_qdrant
+
 serve:
 	# python -m src.databricks_llm_fine_tuning_demo.model.train	
 	poetry run streamlit run src/app_rag_db/app.py	

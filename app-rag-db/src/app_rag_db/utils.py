@@ -13,6 +13,8 @@ from langchain.embeddings.base import Embeddings
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
+from qdrant_client import QdrantClient
+
 
 
 

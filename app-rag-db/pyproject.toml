@@ -30,7 +30,8 @@ dependencies = [
     "streamlit (>=1.43.2,<2.0.0)",
     "faiss-cpu (>=1.10.0,<2.0.0)",
     "huggingface-hub (>=0.29.3,<0.30.0)",
-    "pymupdf (>=1.25.5,<2.0.0)"
+    "pymupdf (>=1.25.5,<2.0.0)",
+    "qdrant-client (<1.13.3)",    
 ]
 
 [tool.poetry]
