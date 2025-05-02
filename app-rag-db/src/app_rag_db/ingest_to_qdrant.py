@@ -32,25 +32,6 @@ class HFCLIPTextEmbedding(Embeddings):
         return [self.embed_query(t) for t in texts]
 
 # === Text Extraction ===
-# def get_pdf_text(filepath):
-#     text = ""
-#     with fitz.open(filepath) as doc:
-#         for page in doc:
-#             text += page.get_text()
-#     return text
-# def get_pdf_text(pdf_docs):
-#     """
-#     Based on PyMuPDF for better text extraction then PyPDF2.
-#     Source: https://pymupdf.readthedocs.io/en/latest/the-basics.html
-
-#     See in there how to expand on other document types and images
-#     """
-#     text = ""
-#     for pdf in pdf_docs:
-#         with pymupdf.open(stream=pdf.read(), filetype="pdf") as doc:
-#             for page in doc:
-#                 text += page.get_text()
-#     return text
 def get_pdf_text(filepath):
     """
     Extract text from a PDF file using PyMuPDF.
