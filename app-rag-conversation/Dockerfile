@@ -52,4 +52,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8501
 
 # Command to run the Streamlit app
-CMD ["poetry", "run", "streamlit", "run", "src/app_rag_conversation/app.py", "--server.address=0.0.0.0"]
+CMD ["/app/.venv/bin/streamlit", "run", "src/app_rag_conversation/app.py", "--server.address=0.0.0.0"]
