@@ -1,22 +1,11 @@
-Introduction to RAG
+# app-rag-db
 
-This repo is massively inspired by 
-* videos from https://www.youtube.com/@alejandro_ao
-* https://github.com/alejandro-ao
-
-Content:
-
-**app-one-pdf**: Streamlit app to query one PDF and store the vector in Qdrant Cloud (local test mode yet)
-
-**app-rag-conversation**: Dockerized Streamlit app to upload multiple PDFs and have a conversation with it (i.e. using memory)
-
-**app-rag-db**: (WIP) Dockerized Streamlit app to (1) upload folder containing many PDFs into Qdrant VS database and (2) query the VS database
+**Objective**: (WIP) Dockerized Streamlit app to (1) upload folder containing many PDFs into Qdrant VS database and (2) query the VS database
 
 Here the app is served using `make serve` 
 
 The ingestion of the PDF folder into Qdrant is done using `make ingest`
 
-langchain_multimodal.ipynb: multi-modal RAG, i.e. extracting text, images from a PDF (using unstructured) and converting the documents into embeddings (using Chroma as vector store)
 
 **Docker image**: to create & run it:
 
