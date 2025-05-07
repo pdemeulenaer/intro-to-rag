@@ -24,15 +24,28 @@ COLLECTION_NAME = "test_collection"
 PDF_FOLDER = os.path.join(os.path.dirname(__file__), "folder")
 
 
+# class HFCLIPTextEmbedding(Embeddings):
+#     def __init__(self, model_name: str, api_token: str):
+#         self.client = InferenceClient(model=model_name, token=api_token)
+    
+#     def embed_query(self, text: str) -> List[float]:
+#         return self.client.feature_extraction(text)
+    
+#     def embed_documents(self, texts: List[str]) -> List[List[float]]:
+#         return [self.embed_query(t) for t in texts]
+
+
 class HFCLIPTextEmbedding(Embeddings):
     def __init__(self, model_name: str, api_token: str):
-        self.client = InferenceClient(model=model_name, token=api_token)
+        self.model_name = model_name  # Store model_name as instance variable
+        self.client = InferenceClient(provider="hf-inference", api_key=api_token)
     
-    def embed_query(self, text: str) -> List[float]:
-        return self.client.feature_extraction(text)
+    def embed_query(self, text: str) -> List[float]:  # Remove model_name parameter
+        return self.client.feature_extraction(text, model=self.model_name)  # text as first positional argument
     
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        return [self.embed_query(t) for t in texts]
+        return [self.embed_query(t) for t in texts]  # No need to pass model_name here
+
 
 # === Text Extraction ===
 def get_pdf_text(filepath):
@@ -100,10 +113,6 @@ def ingest_folder_to_qdrant(folder_path, qdrant_url, qdrant_api_key, collection_
             collection_name=collection_name,
             vectors_config=VectorParams(size=384, distance=Distance.COSINE)
         )    
-    # qdrant_client.recreate_collection(
-    #     collection_name=collection_name,
-    #     vectors_config=VectorParams(size=384, distance=Distance.COSINE)
-    # )
 
     # Create payload indexes
     qdrant_client.create_payload_index(
@@ -118,11 +127,11 @@ def ingest_folder_to_qdrant(folder_path, qdrant_url, qdrant_api_key, collection_
         field_schema=PayloadSchemaType.KEYWORD
     )
 
-    vectorstore = Qdrant(
-        client=qdrant_client,
-        collection_name=collection_name,
-        embeddings=embedding_model
-    )    
+    # vectorstore = Qdrant(
+    #     client=qdrant_client,
+    #     collection_name=collection_name,
+    #     embeddings=embedding_model
+    # )    
 
     for filename in os.listdir(folder_path):
         if not filename.lower().endswith(".pdf"):
