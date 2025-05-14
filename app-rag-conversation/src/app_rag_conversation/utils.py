@@ -13,6 +13,8 @@ from langchain.embeddings.base import Embeddings
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
+import requests
+from langchain.embeddings.base import Embeddings
 
 
 
@@ -87,6 +89,26 @@ class HFCLIPTextEmbedding(Embeddings):
     
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         return [self.embed_query(t) for t in texts]
+    
+
+
+
+class RemoteEmbeddingsAPI(Embeddings):
+    def __init__(self, endpoint_url: str):
+        self.endpoint_url = endpoint_url.rstrip("/") + "/embed"
+
+    def embed_query(self, text: str) -> List[float]:
+        response = requests.post(
+            self.endpoint_url,
+            json={"text": text},
+            timeout=10
+        )
+        response.raise_for_status()
+        return response.json()["embedding"]
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        return [self.embed_query(text) for text in texts]
+
 
 
 # def get_vectorstore(text_chunks):
@@ -122,9 +144,60 @@ class HFCLIPTextEmbedding(Embeddings):
 #     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
 #     return vectorstore
 
+# def get_vectorstore(text_chunks):
+#     """
+#     Create a vector store using Hugging Face Inference API embeddings with fallback.
+    
+#     Args:
+#         text_chunks (list): List of text chunks to embed
+    
+#     Returns:
+#         FAISS: A FAISS vector store with embedded text chunks
+#     """
+#     # Ensure Hugging Face API token is set
+#     if 'HUGGINGFACE_API_TOKEN' not in os.environ:
+#         raise ValueError("Please set the HUGGINGFACE_API_TOKEN environment variable")
+    
+#     # List of models to try in order
+#     models_to_try = [
+#         # "intfloat/e5-base-v2",
+#         "sentence-transformers/clip-ViT-B-32",  # Primary model HF API NOT WORKING AS OF NOW
+#         "laion/CLIP-ViT-B-32-laion2B-s34B-b79K", # Fallback model HF API NOT WORKING AS OF NOW
+#         "openai/clip-vit-base-patch32", # Another fallback HF API NOT WORKING AS OF NOW
+#         "Salesforce/blip-image-captioning-base", # Another fallback HF API NOT WORKING AS OF NOW
+#         "sentence-transformers/all-MiniLM-L6-v2" # embedding model for TEXT ONLY        
+#     ]
+    
+#     # Try each model until one works
+#     for model_name in models_to_try:
+#         try:
+#             # # Use LangChain's built-in Hugging Face Inference API Embeddings
+#             # embeddings = HuggingFaceInferenceAPIEmbeddings(
+#             #     api_key=os.environ['HUGGINGFACE_API_TOKEN'],
+#             #     model_name=model_name
+#             # )
+
+#             # Use HuggingFaceHub directly
+#             embeddings = HFCLIPTextEmbedding(
+#                 model_name=model_name,
+#                 api_token=os.environ['HUGGINGFACE_API_TOKEN']
+#             )        
+            
+#             # Create and return FAISS vector store
+#             vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
+#             print(f"Successfully used model: {model_name}")
+#             return vectorstore
+        
+#         except Exception as e:
+#             print(f"Failed to use model {model_name}: {e}")
+#             continue
+    
+#     # If all models fail
+#     raise ValueError("Could not create embeddings with any of the specified models")
+
 def get_vectorstore(text_chunks):
     """
-    Create a vector store using Hugging Face Inference API embeddings with fallback.
+    Create a vector store using a remote embedding API.
     
     Args:
         text_chunks (list): List of text chunks to embed
@@ -132,46 +205,18 @@ def get_vectorstore(text_chunks):
     Returns:
         FAISS: A FAISS vector store with embedded text chunks
     """
-    # Ensure Hugging Face API token is set
-    if 'HUGGINGFACE_API_TOKEN' not in os.environ:
-        raise ValueError("Please set the HUGGINGFACE_API_TOKEN environment variable")
-    
-    # List of models to try in order
-    models_to_try = [
-        # "intfloat/e5-base-v2",
-        "sentence-transformers/clip-ViT-B-32",  # Primary model HF API NOT WORKING AS OF NOW
-        "laion/CLIP-ViT-B-32-laion2B-s34B-b79K", # Fallback model HF API NOT WORKING AS OF NOW
-        "openai/clip-vit-base-patch32", # Another fallback HF API NOT WORKING AS OF NOW
-        "Salesforce/blip-image-captioning-base", # Another fallback HF API NOT WORKING AS OF NOW
-        "sentence-transformers/all-MiniLM-L6-v2" # embedding model for TEXT ONLY        
-    ]
-    
-    # Try each model until one works
-    for model_name in models_to_try:
-        try:
-            # # Use LangChain's built-in Hugging Face Inference API Embeddings
-            # embeddings = HuggingFaceInferenceAPIEmbeddings(
-            #     api_key=os.environ['HUGGINGFACE_API_TOKEN'],
-            #     model_name=model_name
-            # )
+    EMBEDDING_API_URL = os.environ.get("EMBEDDING_API_URL")
+    if not EMBEDDING_API_URL:
+        raise ValueError("Please set the EMBEDDING_API_URL environment variable")
 
-            # Use HuggingFaceHub directly
-            embeddings = HFCLIPTextEmbedding(
-                model_name=model_name,
-                api_token=os.environ['HUGGINGFACE_API_TOKEN']
-            )        
-            
-            # Create and return FAISS vector store
-            vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
-            print(f"Successfully used model: {model_name}")
-            return vectorstore
-        
-        except Exception as e:
-            print(f"Failed to use model {model_name}: {e}")
-            continue
-    
-    # If all models fail
-    raise ValueError("Could not create embeddings with any of the specified models")
+    try:
+        embeddings = RemoteEmbeddingsAPI(endpoint_url=EMBEDDING_API_URL)
+        vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
+        print(f"Successfully used remote embedding model at {EMBEDDING_API_URL}")
+        return vectorstore
+    except Exception as e:
+        raise RuntimeError(f"Failed to use remote embedding service: {e}")
+
 
 
 
