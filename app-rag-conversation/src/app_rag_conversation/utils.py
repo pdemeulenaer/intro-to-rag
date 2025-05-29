@@ -287,3 +287,4 @@ def get_conversation_chain(vectorstore):
         memory=memory
     )
     return conversation_chain
+
