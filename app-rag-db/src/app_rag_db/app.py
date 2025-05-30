@@ -23,13 +23,17 @@ def handle_userinput(user_question):
         response = st.session_state.conversation({'question': user_question})
         st.session_state.chat_history = response['chat_history']
 
-        for i, message in enumerate(st.session_state.chat_history):
-            if i % 2 == 0:
-                st.write(user_template.replace(
-                    "{{MSG}}", message.content), unsafe_allow_html=True)
-            else:
-                st.write(bot_template.replace(
-                    "{{MSG}}", message.content), unsafe_allow_html=True)
+        # Group messages into pairs: (user, bot)
+        pairs = [
+            (st.session_state.chat_history[i], st.session_state.chat_history[i + 1])
+            for i in range(0, len(st.session_state.chat_history) - 1, 2)
+        ]
+
+        # Reverse the pairs and display user first, then bot
+        for user_msg, bot_msg in reversed(pairs):
+            st.write(user_template.replace("{{MSG}}", user_msg.content), unsafe_allow_html=True)
+            st.write(bot_template.replace("{{MSG}}", bot_msg.content), unsafe_allow_html=True)
+                
     except Exception as e:
         st.error(f"Error processing your question: {str(e)}")
 
