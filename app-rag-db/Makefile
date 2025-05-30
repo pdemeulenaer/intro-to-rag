@@ -6,16 +6,12 @@ SHELL := $(shell which bash)
 
 env-file:
 	cp .env.sample .env
-
-# conda:
-# 	conda env create --file environment.yml --yes
-# 	$(CONDA_ACTIVATE) databricks-llm-fine-tuning-demo
+	@echo "Created .env file from .env.sample"
 
 install:
-#	pip install -r requirements.txt
-#	pip install -e .
 	poetry install
 	poetry lock
+	@echo "Installed dependencies with Poetry"
 
 # pre-commit:
 # 	pre-commit install
@@ -32,17 +28,16 @@ lint:
 test:
 	behave tests/features/
 
-doc: 
-	mkdocs build	
+# doc: 
+# 	mkdocs build	
 
-quality: black lint test
+# quality: black lint test
 
-quality-ci: lint test
+# quality-ci: lint test
 
 ingest:
 	poetry run python -m src.app_rag_db.ingest_to_qdrant
 
 serve:
-	# python -m src.databricks_llm_fine_tuning_demo.model.train	
 	poetry run streamlit run src/app_rag_db/app.py	
 
