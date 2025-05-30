@@ -58,44 +58,102 @@ def main():
 
     # Main header
     st.header("🤖 RAG Chat with PDF Knowledge Base")
-    st.markdown("Ask questions about the documents in your knowledge base!")
+    # st.markdown("Ask questions about the documents in your knowledge base!")
 
     # Sidebar for database connection
     with st.sidebar:
         st.subheader("📚 Knowledge Base")
         
-        # Display database info
-        display_database_info()
+        # # Display database info
+        # display_database_info()
         
         st.markdown("---")
-        
-        # Connect to database button
-        if st.button("🔌 Connect to Knowledge Base", type="primary"):
-            with st.spinner("Connecting to Qdrant database..."):
-                try:
-                    vectorstore = get_qdrant_vectorstore()
-                    st.session_state.conversation = get_conversation_chain(vectorstore)
-                    st.session_state.vectorstore_connected = True
-                    st.success("✅ Successfully connected to knowledge base!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ Connection failed: {str(e)}")
-                    st.session_state.vectorstore_connected = False
-        
-        # Reset conversation button
-        if st.session_state.vectorstore_connected:
-            if st.button("🔄 Reset Conversation"):
-                st.session_state.chat_history = None
-                if st.session_state.conversation:
-                    st.session_state.conversation.memory.clear()
-                st.success("Conversation reset!")
-                st.rerun()
 
-    # Main chat interface
-    if st.session_state.vectorstore_connected:
-        st.success("🟢 Knowledge base connected - Ready to answer questions!")
-    else:
-        st.warning("🟡 Please connect to the knowledge base first using the sidebar")
+        # # Button to connect to vectorstore (Qdrant or local)
+        # connect_button_clicked = st.button(
+        #     "🔌 Connect to Knowledge Base",
+        #     type="primary" if not st.session_state.get("vectorstore_connected") else "secondary"
+        # )
+
+        # if connect_button_clicked:
+        #     try:
+        #         retriever = get_qdrant_vectorstore()
+        #         st.session_state.retriever = retriever
+        #         st.session_state.vectorstore_connected = True
+        #         st.success("✅ Successfully connected to knowledge base!")
+        #     except Exception as e:
+        #         st.session_state.vectorstore_connected = False
+        #         st.error(f"❌ Failed to connect: {str(e)}")
+
+        # # ✅ Show connection info only after successful connection
+        # if st.session_state.get("vectorstore_connected"):
+        #     display_database_info()        
+        
+        # # Connect to database button
+        # if st.button("🔌 Connect to Knowledge Base", type="primary"):
+        #     with st.spinner("Connecting to Qdrant database..."):
+        #         try:
+        #             vectorstore = get_qdrant_vectorstore()
+        #             st.session_state.conversation = get_conversation_chain(vectorstore)
+        #             st.session_state.vectorstore_connected = True
+        #             st.success("✅ Successfully connected to knowledge base!")
+        #             st.rerun()
+        #         except Exception as e:
+        #             st.error(f"❌ Connection failed: {str(e)}")
+        #             st.session_state.vectorstore_connected = False
+        
+        # # Reset conversation button
+        # if st.session_state.vectorstore_connected:
+        #     if st.button("🔄 Reset Conversation"):
+        #         st.session_state.chat_history = None
+        #         if st.session_state.conversation:
+        #             st.session_state.conversation.memory.clear()
+        #         st.success("Conversation reset!")
+        #         st.rerun()
+
+        if not st.session_state.vectorstore_connected:
+            # Show RED connect button before connection
+            if st.button("🔌 Connect to Knowledge Base", type="primary"):
+                with st.spinner("Connecting to Qdrant database..."):
+                    try:
+                        vectorstore = get_qdrant_vectorstore()
+                        st.session_state.conversation = get_conversation_chain(vectorstore)
+                        st.session_state.vectorstore_connected = True
+                        st.success("✅ Successfully connected to knowledge base!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Connection failed: {str(e)}")
+                        st.session_state.vectorstore_connected = False
+        else:
+            # Show GREEN button after connection (not clickable)
+            st.markdown(
+                """
+                <div style="text-align:center;">
+                    <button disabled style="
+                        background-color: #28a745;
+                        color: white;
+                        border: none;
+                        padding: 0.5rem 1rem;
+                        border-radius: 0.5rem;
+                        font-size: 1rem;
+                        width: 100%;
+                        cursor: default;
+                    ">
+                        🟢 Connected to Knowledge Base
+                    </button>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )  
+
+            # Display database info
+            display_database_info()             
+
+    # # Main chat interface
+    # if st.session_state.vectorstore_connected:
+    #     st.success("🟢 Knowledge base connected - Ready to answer questions!")
+    # else:
+    #     st.warning("🟡 Please connect to the knowledge base first using the sidebar")
 
     # Chat input
     user_question = st.text_input(
