@@ -42,7 +42,7 @@ def main():
     load_dotenv()
 
     st.set_page_config(
-        page_title="RAG Chat with PDF Knowledge Base",
+        page_title="RAG with your PDF Knowledge Base",
         page_icon="🤖",
         layout="wide"
     )
