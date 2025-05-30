@@ -1,17 +1,23 @@
 # app-rag-db
 
-**Objective**: (WIP) Dockerized Streamlit app to (1) upload folder containing many PDFs into Qdrant VS database and (2) query the VS database
+**Objective**: Deploy a Streamlit app (as a Docker container) that allows the user to query a large amount of PDF documents that are pre-loaded into a Vector Store (Qdrant). 
 
-Here the app is served using `make serve` 
+Basically the 2 main steps are:
+
+1. Upload folder containing many PDFs into the Qdrant VS database
 
 The ingestion of the PDF folder into Qdrant is done using `make ingest`
 
+2. Query the Qdrant Vector Store database
+
+The app is served locally using `make serve` 
 
 **Docker image**: to create & run it:
 
-* docker build -t rag-app:0.0.1 .
-* docker run -p 8501:8501 --env-file .env rag-app:0.0.1
-* docker image tag rag-app:0.0.1 pdemeulenaer/rag-app:0.0.1
+* docker build -t rag-app-db:0.0.1 .
+* docker run -p 8501:8501 --env-file .env rag-app-db:0.0.1
+* docker image tag rag-app:0.0.1 pdemeulenaer/rag-app-db:0.0.1
 * docker login
-* docker image push pdemeulenaer/rag-app:0.0.1
+* docker image push pdemeulenaer/rag-app-db:0.0.1
 
+TODO: indicate to the Docker container what is the address of the Qdrant VS
