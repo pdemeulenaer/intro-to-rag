@@ -17,8 +17,11 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.schema import Document
 from langchain.schema.retriever import BaseRetriever
+from langchain.callbacks.manager import CallbackManagerForRetrieverRun
 from qdrant_client import QdrantClient
 import requests
+from typing import Any, List
+
 
 
 
@@ -263,9 +266,6 @@ def get_conversation_chain(retriever): #(vectorstore):
     return conversation_chain
 
 
-
-# TEST THESE FUNCTIONS (not accepted yet)
-
 class RemoteEmbeddingsAPI(Embeddings):
     def __init__(self, endpoint_url: str):
         self.endpoint_url = endpoint_url.rstrip("/") + "/embed"
@@ -281,12 +281,6 @@ class RemoteEmbeddingsAPI(Embeddings):
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         return [self.embed_query(text) for text in texts]
-
-
-from typing import Any, List
-from langchain.schema.retriever import BaseRetriever
-from langchain.schema import Document
-from langchain.callbacks.manager import CallbackManagerForRetrieverRun
 
 class QdrantRetriever(BaseRetriever):
     """Custom retriever for Qdrant that properly handles the text field."""
