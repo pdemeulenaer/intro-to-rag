@@ -24,7 +24,6 @@ import requests
 from typing import Any, List
 
 
-
 # def get_pdf_text(pdf_docs):
 #     """
 #     Extract text from a list of PDF documents.
@@ -250,22 +249,49 @@ def get_conversation_chain(retriever): #(vectorstore):
         memory_key='chat_history', return_messages=True)
 
     # Custom prompt template
-    custom_prompt_template = PromptTemplate.from_template(
-        """
-        You are a helpful assistant. Use only the following pieces of context to answer the question.
-        If you don't know the answer based on the context, say, you can mention this first and then, in a new paragraph, you can generate a concise answer based on your internal knowledge.
+    # custom_prompt_template = PromptTemplate.from_template(
+    #     """
+    #     You are a helpful assistant. Use only the following pieces of context to answer the question.
+    #     If you don't know the answer based on the context, say, you can mention this first and then, in a new paragraph, you can generate a concise answer based on your internal knowledge.
         
-        --- 
-        Context:
-        {context}
-        ---
-        Chat history:
-        {chat_history}
-        ---
-        Question: {question}
-        Answer:
-        """
-    )
+    #     --- 
+    #     Context:
+    #     {context}
+    #     ---
+    #     Chat history:
+    #     {chat_history}
+    #     ---
+    #     Question: {question}
+    #     Answer:
+    #     """
+    # )
+
+    custom_prompt_template = PromptTemplate.from_template("""
+    You are a helpful AI assistant answering questions based on context from PDF documents.
+    
+    If you don't know the answer based on the context, say, you can mention this first and then you can generate a concise answer based on your internal knowledge.
+
+    When answering, if the answer is based on the context, cite the sources where the information was found using the provided metadata (e.g., file name, page number)
+
+    ---
+
+    CONTEXT:
+    {context}
+
+    ---
+
+    CHAT HISTORY:
+    {chat_history}
+
+    ---
+
+    QUESTION:
+    {question}
+
+    ---
+
+    ANSWER:
+    """)    
 
     conversation_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
@@ -293,26 +319,72 @@ class RemoteEmbeddingsAPI(Embeddings):
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         return [self.embed_query(text) for text in texts]
 
-class QdrantRetriever(BaseRetriever):
-    """Custom retriever for Qdrant that properly handles the text field."""
+# class QdrantRetriever(BaseRetriever):
+#     """Custom retriever for Qdrant that properly handles the text field."""
     
+#     def __init__(self, qdrant_client, collection_name, embeddings, k=5):
+#         super().__init__()
+#         # Use object.__setattr__ to bypass Pydantic validation
+#         object.__setattr__(self, 'qdrant_client', qdrant_client)
+#         object.__setattr__(self, 'collection_name', collection_name)
+#         object.__setattr__(self, 'embeddings', embeddings)
+#         object.__setattr__(self, 'k', k)
+    
+#     def _get_relevant_documents(
+#         self, 
+#         query: str, 
+#         *, 
+#         run_manager: CallbackManagerForRetrieverRun = None
+#     ) -> List[Document]:
+#         # Embed the query
+#         query_vector = self.embeddings.embed_query(query)
+        
+#         # Search in Qdrant
+#         search_results = self.qdrant_client.search(
+#             collection_name=self.collection_name,
+#             query_vector=query_vector,
+#             limit=self.k,
+#             with_payload=True
+#         )
+        
+#         # Convert to LangChain Documents
+#         documents = []
+#         for result in search_results:
+#             # Extract text content from the payload
+#             text_content = result.payload.get("text", "")
+            
+#             # Create metadata (exclude text content from metadata)
+#             metadata = {k: v for k, v in result.payload.items() if k != "text"}
+#             metadata["score"] = result.score
+            
+#             # Create Document object
+#             doc = Document(
+#                 page_content=text_content,
+#                 metadata=metadata
+#             )
+#             documents.append(doc)
+        
+#         return documents
+
+class QdrantRetriever(BaseRetriever):
+    """Custom retriever for Qdrant that handles text field and adds source citation."""
+
     def __init__(self, qdrant_client, collection_name, embeddings, k=5):
         super().__init__()
-        # Use object.__setattr__ to bypass Pydantic validation
         object.__setattr__(self, 'qdrant_client', qdrant_client)
         object.__setattr__(self, 'collection_name', collection_name)
         object.__setattr__(self, 'embeddings', embeddings)
         object.__setattr__(self, 'k', k)
-    
+
     def _get_relevant_documents(
-        self, 
-        query: str, 
-        *, 
+        self,
+        query: str,
+        *,
         run_manager: CallbackManagerForRetrieverRun = None
     ) -> List[Document]:
         # Embed the query
         query_vector = self.embeddings.embed_query(query)
-        
+
         # Search in Qdrant
         search_results = self.qdrant_client.search(
             collection_name=self.collection_name,
@@ -320,24 +392,29 @@ class QdrantRetriever(BaseRetriever):
             limit=self.k,
             with_payload=True
         )
-        
-        # Convert to LangChain Documents
+
+        # Convert to LangChain Documents with source citation
         documents = []
         for result in search_results:
-            # Extract text content from the payload
-            text_content = result.payload.get("text", "")
-            
-            # Create metadata (exclude text content from metadata)
-            metadata = {k: v for k, v in result.payload.items() if k != "text"}
+            payload = result.payload
+            text_content = payload.get("text", "")
+
+            # Extract citation metadata
+            source = payload.get("source", "Unknown source")
+            page = payload.get("page", "n/a")
+
+            # Optional: add score if useful
+            metadata = {k: v for k, v in payload.items() if k != "text"}
             metadata["score"] = result.score
-            
-            # Create Document object
-            doc = Document(
-                page_content=text_content,
+
+            # Embed the source citation into the content
+            formatted_content = f"[Source: {source}, page {page}]\n{text_content}"
+
+            documents.append(Document(
+                page_content=formatted_content,
                 metadata=metadata
-            )
-            documents.append(doc)
-        
+            ))
+
         return documents
 
 
