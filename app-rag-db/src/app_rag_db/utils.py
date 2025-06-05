@@ -23,6 +23,12 @@ from qdrant_client import QdrantClient
 import requests
 from typing import Any, List
 
+from langchain.chains.combine_documents.stuff import StuffDocumentsChain
+from langchain.chains import ConversationalRetrievalChain
+from langchain.chains.llm import LLMChain
+from langchain.schema import BasePromptTemplate
+
+import os
 
 # def get_pdf_text(pdf_docs):
 #     """
@@ -182,52 +188,112 @@ def get_vectorstore(text_chunks):
     raise ValueError("Could not create embeddings with any of the specified models")
 
 
+def build_context_and_references(documents):
+    context = "\n\n".join(doc.page_content for doc in documents)
 
-# def get_conversation_chain(vectorstore):
-#     llm = ChatOpenAI()
-#     # llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature":0.5, "max_length":512})
+    references = "\n".join(
+        f"[{i+1}] {doc.metadata.get('source', 'Unknown Source')}, page {doc.metadata.get('page', 'N/A')}"
+        for i, doc in enumerate(documents)
+    )
 
-#     memory = ConversationBufferMemory(
-#         memory_key='chat_history', return_messages=True)
-#     conversation_chain = ConversationalRetrievalChain.from_llm(
-#         llm=llm,
-#         retriever=vectorstore.as_retriever(),
-#         memory=memory
+    return context, references
+
+
+# def format_context_and_references(docs):
+#     context = "\n\n".join(doc.page_content for doc in docs)
+#     references = "\n".join(
+#         f"[{i+1}] {doc.metadata.get('source', 'Unknown Source')}, page {doc.metadata.get('page', 'N/A')}"
+#         for i, doc in enumerate(docs)
 #     )
-#     return conversation_chain
-# def get_conversation_chain(vectorstore):
-#     # Load the model locally
-#     # model_id = "meta-llama/Llama-2-7b-chat-hf" # (requires Hugging Face approval for access)
-#     # model_id = "mistralai/Mixtral-8x7B-Instruct-v0.1" # (openly accessible, instruction-tuned)
-#     model_id = "HuggingFaceH4/zephyr-7b-beta" # (a strong, open-source chat model)
+#     return {"context": context, "references": references}
+def format_documents(docs):
+    context = "\n\n".join(doc.page_content for doc in docs)
+    references = "\n".join(
+        f"[{i+1}] {doc.metadata.get('source', 'Unknown Source')}, page {doc.metadata.get('page', 'N/A')}"
+        for i, doc in enumerate(docs)
+    )
+    return {"context": context, "references": references}
 
-#     tokenizer = AutoTokenizer.from_pretrained(model_id)
-#     model = AutoModelForCausalLM.from_pretrained(model_id)
-    
-#     # Create a pipeline for text generation
-#     hf_pipeline = pipeline(
-#         "text-generation",
-#         model=model,
-#         tokenizer=tokenizer,
-#         max_length=512,
-#         temperature=0.5
-#     )
-    
-#     # Wrap it in HuggingFacePipeline
-#     llm = HuggingFacePipeline(pipeline=hf_pipeline)
-    
-#     # Use ChatHuggingFace for chat compatibility
-#     chat_llm = ChatHuggingFace(llm=llm)
 
-#     memory = ConversationBufferMemory(
-#         memory_key='chat_history', return_messages=True)
-#     conversation_chain = ConversationalRetrievalChain.from_llm(
-#         llm=chat_llm,
-#         retriever=vectorstore.as_retriever(),
-#         memory=memory
-#     )
-#     return conversation_chain
-def get_conversation_chain(retriever): #(vectorstore):
+
+
+# Custom prompt template
+# custom_prompt_template = PromptTemplate.from_template(
+#     """
+#     You are a helpful assistant. Use only the following pieces of context to answer the question.
+#     If you don't know the answer based on the context, say, you can mention this first and then, in a new paragraph, you can generate a concise answer based on your internal knowledge.
+    
+#     --- 
+#     Context:
+#     {context}
+#     ---
+#     Chat history:
+#     {chat_history}
+#     ---
+#     Question: {question}
+#     Answer:
+#     """
+# )
+
+custom_prompt_template = PromptTemplate.from_template("""
+You are a helpful AI assistant answering questions based on context from PDF documents.
+
+If you don't know the answer based on the context, say, you can mention this first and then you can generate a concise answer based on your internal knowledge.
+When answering, if the answer is based on the context, cite the sources using the academic style [1], [2], etc. Use the reference list provided below, which includes metadata (e.g., file name and page number).
+
+---
+
+CONTEXT:
+{context}
+
+---
+
+CHAT HISTORY:
+{chat_history}
+
+---
+
+QUESTION:
+{question}
+
+---
+
+ANSWER:
+""") 
+
+# custom_prompt_template = PromptTemplate.from_template("""
+# You are a helpful AI assistant answering questions based on context from PDF documents.
+
+# If you don't know the answer based on the context, say, you can mention this first and then you can generate a concise answer based on your internal knowledge.
+# When answering, if the answer is based on the context, cite the sources using the academic style [1], [2], etc. Use the reference list provided below, which includes metadata (e.g., file name and page number).
+
+# ---
+
+# CONTEXT:
+# {context}
+                                                      
+# ---
+
+# REFERENCES:
+# {references}
+
+# ---
+
+# CHAT HISTORY:
+# {chat_history}
+
+# ---
+
+# QUESTION:
+# {question}
+
+# ---
+
+# ANSWER:
+# """)   
+
+
+def get_conversation_chain(retriever):
     """
     Create conversation chain with Groq LLM and vectorstore.
     """
@@ -247,51 +313,7 @@ def get_conversation_chain(retriever): #(vectorstore):
     
     memory = ConversationBufferMemory(
         memory_key='chat_history', return_messages=True)
-
-    # Custom prompt template
-    # custom_prompt_template = PromptTemplate.from_template(
-    #     """
-    #     You are a helpful assistant. Use only the following pieces of context to answer the question.
-    #     If you don't know the answer based on the context, say, you can mention this first and then, in a new paragraph, you can generate a concise answer based on your internal knowledge.
-        
-    #     --- 
-    #     Context:
-    #     {context}
-    #     ---
-    #     Chat history:
-    #     {chat_history}
-    #     ---
-    #     Question: {question}
-    #     Answer:
-    #     """
-    # )
-
-    custom_prompt_template = PromptTemplate.from_template("""
-    You are a helpful AI assistant answering questions based on context from PDF documents.
-    
-    If you don't know the answer based on the context, say, you can mention this first and then you can generate a concise answer based on your internal knowledge.
-
-    When answering, if the answer is based on the context, cite the sources where the information was found using the provided metadata (e.g., file name, page number)
-
-    ---
-
-    CONTEXT:
-    {context}
-
-    ---
-
-    CHAT HISTORY:
-    {chat_history}
-
-    ---
-
-    QUESTION:
-    {question}
-
-    ---
-
-    ANSWER:
-    """)    
+ 
 
     conversation_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
@@ -301,6 +323,52 @@ def get_conversation_chain(retriever): #(vectorstore):
     )
 
     return conversation_chain
+
+# def get_conversation_chain(retriever):
+#     groq_api_key = os.getenv("GROQ_API_KEY")
+#     if not groq_api_key:
+#         raise ValueError("GROQ_API_KEY not found in .env file")
+
+#     llm = ChatGroq(
+#         groq_api_key=groq_api_key,
+#         model_name="llama-3.3-70b-versatile",
+#         temperature=0.5,
+#     )
+
+#     memory = ConversationBufferMemory(
+#         memory_key='chat_history',
+#         return_messages=True
+#     )
+
+#     llm_chain = LLMChain(llm=llm, prompt=custom_prompt_template)
+
+#     stuff_chain = StuffDocumentsChain(
+#         llm_chain=llm_chain,
+#         document_variable_name="context",
+#         document_prompt=PromptTemplate.from_template("{page_content}"),  # default
+#         # input_variables=["context", "references", "chat_history", "question"]
+#     )
+
+#     class CustomStuffChainWrapper:
+#         def __init__(self, chain):
+#             self.chain = chain
+
+#         def __call__(self, inputs):
+#             docs = inputs.pop("docs")
+#             formatted = format_documents(docs)
+#             return self.chain.run({
+#                 **inputs,
+#                 **formatted
+#             })
+
+#     chain_wrapper = CustomStuffChainWrapper(stuff_chain)
+
+#     return ConversationalRetrievalChain(
+#         retriever=retriever,
+#         memory=memory,
+#         combine_docs_chain=chain_wrapper,
+#         return_source_documents=True
+#     )
 
 
 class RemoteEmbeddingsAPI(Embeddings):
@@ -366,8 +434,59 @@ class RemoteEmbeddingsAPI(Embeddings):
         
 #         return documents
 
+# class QdrantRetriever(BaseRetriever):
+#     """Custom retriever for Qdrant that handles text field and adds source citation."""
+
+#     def __init__(self, qdrant_client, collection_name, embeddings, k=5):
+#         super().__init__()
+#         object.__setattr__(self, 'qdrant_client', qdrant_client)
+#         object.__setattr__(self, 'collection_name', collection_name)
+#         object.__setattr__(self, 'embeddings', embeddings)
+#         object.__setattr__(self, 'k', k)
+
+#     def _get_relevant_documents(
+#         self,
+#         query: str,
+#         *,
+#         run_manager: CallbackManagerForRetrieverRun = None
+#     ) -> List[Document]:
+#         # Embed the query
+#         query_vector = self.embeddings.embed_query(query)
+
+#         # Search in Qdrant
+#         search_results = self.qdrant_client.search(
+#             collection_name=self.collection_name,
+#             query_vector=query_vector,
+#             limit=self.k,
+#             with_payload=True
+#         )
+
+#         # Convert to LangChain Documents with source citation
+#         documents = []
+#         for result in search_results:
+#             payload = result.payload
+#             text_content = payload.get("text", "")
+
+#             # Extract citation metadata
+#             source = payload.get("source", "Unknown source")
+#             page = payload.get("page", "n/a")
+
+#             # Optional: add score if useful
+#             metadata = {k: v for k, v in payload.items() if k != "text"}
+#             metadata["score"] = result.score
+
+#             # Embed the source citation into the content
+#             formatted_content = f"[Source: {source}, page {page}]\n{text_content}"
+
+#             documents.append(Document(
+#                 page_content=formatted_content,
+#                 metadata=metadata
+#             ))
+
+#         return documents
+
 class QdrantRetriever(BaseRetriever):
-    """Custom retriever for Qdrant that handles text field and adds source citation."""
+    """Retriever that returns documents with metadata for academic-style citations."""
 
     def __init__(self, qdrant_client, collection_name, embeddings, k=5):
         super().__init__()
@@ -382,10 +501,8 @@ class QdrantRetriever(BaseRetriever):
         *,
         run_manager: CallbackManagerForRetrieverRun = None
     ) -> List[Document]:
-        # Embed the query
         query_vector = self.embeddings.embed_query(query)
 
-        # Search in Qdrant
         search_results = self.qdrant_client.search(
             collection_name=self.collection_name,
             query_vector=query_vector,
@@ -393,22 +510,25 @@ class QdrantRetriever(BaseRetriever):
             with_payload=True
         )
 
-        # Convert to LangChain Documents with source citation
         documents = []
-        for result in search_results:
+        for idx, result in enumerate(search_results):
             payload = result.payload
             text_content = payload.get("text", "")
-
-            # Extract citation metadata
             source = payload.get("source", "Unknown source")
             page = payload.get("page", "n/a")
 
-            # Optional: add score if useful
-            metadata = {k: v for k, v in payload.items() if k != "text"}
-            metadata["score"] = result.score
+            # Reference number like [1], [2], etc.
+            citation_number = f"[{idx + 1}]"
 
-            # Embed the source citation into the content
-            formatted_content = f"[Source: {source}, page {page}]\n{text_content}"
+            # Add citation number as suffix to the content
+            formatted_content = f"{text_content} {citation_number}"
+
+            metadata = {
+                "source": source,
+                "page": page,
+                "score": result.score,
+                "reference_number": citation_number
+            }
 
             documents.append(Document(
                 page_content=formatted_content,
