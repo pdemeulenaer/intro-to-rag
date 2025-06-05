@@ -18,11 +18,10 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.schema import Document
 from langchain.schema.retriever import BaseRetriever
 from langchain.callbacks.manager import CallbackManagerForRetrieverRun
+from langchain.prompts import PromptTemplate
 from qdrant_client import QdrantClient
 import requests
 from typing import Any, List
-
-
 
 
 
@@ -249,18 +248,30 @@ def get_conversation_chain(retriever): #(vectorstore):
     
     memory = ConversationBufferMemory(
         memory_key='chat_history', return_messages=True)
-    
-    # conversation_chain = ConversationalRetrievalChain.from_llm(
-    #     llm=llm,
-    #     retriever=vectorstore.as_retriever(
-    #         search_kwargs={"k": 5}  # Return top 5 most relevant chunks
-    #     ),
-    #     memory=memory
-    # )
+
+    # Custom prompt template
+    custom_prompt_template = PromptTemplate.from_template(
+        """
+        You are a helpful assistant. Use only the following pieces of context to answer the question.
+        If you don't know the answer based on the context, say, you can mention this first and then, in a new paragraph, you can generate a concise answer based on your internal knowledge.
+        
+        --- 
+        Context:
+        {context}
+        ---
+        Chat history:
+        {chat_history}
+        ---
+        Question: {question}
+        Answer:
+        """
+    )
+
     conversation_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
         retriever=retriever,
-        memory=memory
+        memory=memory,
+        combine_docs_chain_kwargs={"prompt": custom_prompt_template},
     )
 
     return conversation_chain
