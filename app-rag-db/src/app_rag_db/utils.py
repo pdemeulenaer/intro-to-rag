@@ -218,48 +218,48 @@ def format_documents(docs):
 
 
 # Custom prompt template
-# custom_prompt_template = PromptTemplate.from_template(
-#     """
-#     You are a helpful assistant. Use only the following pieces of context to answer the question.
-#     If you don't know the answer based on the context, say, you can mention this first and then, in a new paragraph, you can generate a concise answer based on your internal knowledge.
+custom_prompt_template = PromptTemplate.from_template(
+    """
+    You are a helpful assistant. Use only the following pieces of context to answer the question.
+    If you don't know the answer based on the context, say, you can mention this first and then, in a new paragraph, you can generate a concise answer based on your internal knowledge.
     
-#     --- 
-#     Context:
-#     {context}
-#     ---
-#     Chat history:
-#     {chat_history}
-#     ---
-#     Question: {question}
-#     Answer:
-#     """
-# )
+    --- 
+    Context:
+    {context}
+    ---
+    Chat history:
+    {chat_history}
+    ---
+    Question: {question}
+    Answer:
+    """
+)
 
-custom_prompt_template = PromptTemplate.from_template("""
-You are a helpful AI assistant answering questions based on context from PDF documents.
+# custom_prompt_template = PromptTemplate.from_template("""
+# You are a helpful AI assistant answering questions based on context from PDF documents.
 
-If you don't know the answer based on the context, say, you can mention this first and then you can generate a concise answer based on your internal knowledge.
-When answering, if the answer is based on the context, cite the sources using the academic style [1], [2], etc. Use the reference list provided below, which includes metadata (e.g., file name and page number).
+# If you don't know the answer based on the context, say, you can mention this first and then you can generate a concise answer based on your internal knowledge.
+# When answering, if the answer is based on the context, cite the sources using the academic style [1], [2], etc. Use the reference list provided below, which includes metadata (e.g., file name and page number).
 
----
+# ---
 
-CONTEXT:
-{context}
+# CONTEXT:
+# {context}
 
----
+# ---
 
-CHAT HISTORY:
-{chat_history}
+# CHAT HISTORY:
+# {chat_history}
 
----
+# ---
 
-QUESTION:
-{question}
+# QUESTION:
+# {question}
 
----
+# ---
 
-ANSWER:
-""") 
+# ANSWER:
+# """) 
 
 # custom_prompt_template = PromptTemplate.from_template("""
 # You are a helpful AI assistant answering questions based on context from PDF documents.
