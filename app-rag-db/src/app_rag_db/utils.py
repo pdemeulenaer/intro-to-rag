@@ -28,22 +28,9 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.llm import LLMChain
 from langchain.schema import BasePromptTemplate
 
-import os
 
-# def get_pdf_text(pdf_docs):
-#     """
-#     Extract text from a list of PDF documents.
 
-#     Caveats:
-#     * No structure preservation — things like headings, paragraphs, tables, or bullet lists are flattened.
-#     * No cleaning of noisy OCR or page breaks.
-#     """
-#     text = ""
-#     for pdf in pdf_docs:
-#         pdf_reader = PdfReader(pdf)
-#         for page in pdf_reader.pages:
-#             text += page.extract_text()
-#     return text
+
 
 def get_pdf_text(pdf_docs):
     """
@@ -111,31 +98,6 @@ class HFCLIPTextEmbedding(Embeddings):
 #     return vectorstore
 
 
-# def get_vectorstore(text_chunks, model_name="sentence-transformers/all-MiniLM-L6-v2"):
-#     """
-#     Create a vector store using Hugging Face Inference API embeddings.
-    
-#     Args:
-#         text_chunks (list): List of text chunks to embed
-#         model_name (str): Name of the embedding model
-    
-#     Returns:
-#         FAISS: A FAISS vector store with embedded text chunks
-#     """
-#     # Ensure Hugging Face API token is set
-#     if 'HUGGINGFACE_API_TOKEN' not in os.environ:
-#         raise ValueError("Please set the HUGGINGFACE_API_TOKEN environment variable")
-    
-#     # Use LangChain's built-in Hugging Face Inference API Embeddings
-#     embeddings = HuggingFaceInferenceAPIEmbeddings(
-#         api_key=os.environ['HUGGINGFACE_API_TOKEN'],
-#         model_name=model_name
-#     )
-    
-#     # Create and return FAISS vector store
-#     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
-#     return vectorstore
-
 def get_vectorstore(text_chunks):
     """
     Create a vector store using Hugging Face Inference API embeddings with fallback.
@@ -199,13 +161,6 @@ def build_context_and_references(documents):
     return context, references
 
 
-# def format_context_and_references(docs):
-#     context = "\n\n".join(doc.page_content for doc in docs)
-#     references = "\n".join(
-#         f"[{i+1}] {doc.metadata.get('source', 'Unknown Source')}, page {doc.metadata.get('page', 'N/A')}"
-#         for i, doc in enumerate(docs)
-#     )
-#     return {"context": context, "references": references}
 def format_documents(docs):
     context = "\n\n".join(doc.page_content for doc in docs)
     references = "\n".join(
@@ -213,8 +168,6 @@ def format_documents(docs):
         for i, doc in enumerate(docs)
     )
     return {"context": context, "references": references}
-
-
 
 
 # Custom prompt template
