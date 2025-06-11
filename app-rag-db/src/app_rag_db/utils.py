@@ -6,8 +6,6 @@ from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTex
 from langchain.vectorstores import FAISS
 from langchain_community.vectorstores import Qdrant
 from huggingface_hub import InferenceClient
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.embeddings import HuggingFaceInferenceAPIEmbeddings
 from typing import List
 from huggingface_hub import InferenceClient
 from langchain.embeddings.base import Embeddings
@@ -28,6 +26,8 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.llm import LLMChain
 from langchain.schema import BasePromptTemplate
 
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import CohereRerank
 
 
 
@@ -542,6 +542,9 @@ def get_qdrant_vectorstore():
     return retriever
     
     # return vectorstore
+
+
+    
 
 
 
