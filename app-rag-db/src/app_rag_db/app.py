@@ -5,7 +5,8 @@ from htmlTemplates import css, bot_template, user_template
 from utils import (
     get_qdrant_vectorstore, 
     get_conversation_chain, 
-    display_database_info
+    display_database_info,
+    get_reranked_qdrant_retriever,
 )
 
 
@@ -69,7 +70,8 @@ def main():
             if st.button("🔌 Connect to Knowledge Base", type="primary"):
                 with st.spinner("Connecting to Qdrant database..."):
                     try:
-                        vectorstore = get_qdrant_vectorstore()
+                        # vectorstore = get_qdrant_vectorstore() # Naive RAG
+                        vectorstore = get_reranked_qdrant_retriever() # Reranked RAG
                         st.session_state.conversation = get_conversation_chain(vectorstore)
                         st.session_state.vectorstore_connected = True
                         st.success("✅ Successfully connected to knowledge base!")

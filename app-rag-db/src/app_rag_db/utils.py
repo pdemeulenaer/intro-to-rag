@@ -544,8 +544,46 @@ def get_qdrant_vectorstore():
     # return vectorstore
 
 
-    
+def get_reranked_qdrant_retriever():
+    QDRANT_URL = os.getenv("QDRANT_URL")
+    QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+    COLLECTION_NAME = os.getenv("COLLECTION_NAME", "test_collection")
+    EMBEDDING_API_URL = os.getenv("EMBEDDING_API_URL")
+    COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 
+    if not all([QDRANT_URL, QDRANT_API_KEY, EMBEDDING_API_URL, COHERE_API_KEY]):
+        raise ValueError("Missing required environment variables for reranker setup.")
+
+    # Create Qdrant retriever
+    embedding_model = RemoteEmbeddingsAPI(endpoint_url=EMBEDDING_API_URL)
+    qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+
+    if not qdrant_client.collection_exists(collection_name=COLLECTION_NAME):
+        raise ValueError(f"Collection '{COLLECTION_NAME}' does not exist in Qdrant database")
+
+    base_retriever = QdrantRetriever(
+        qdrant_client=qdrant_client,
+        collection_name=COLLECTION_NAME,
+        embeddings=embedding_model,
+        k=25  # Over-retrieve before reranking
+    )
+
+    # Setup reranker
+    # reranker = CohereRerank(cohere_api_key=COHERE_API_KEY, top_n=5)
+    # Add Cohere reranker (v3.0)
+    reranker = CohereRerank(
+        cohere_api_key=COHERE_API_KEY,
+        model="rerank-english-v3.0",
+        top_n=5  # final documents to pass to the LLM
+    )    
+    
+    # Wrap retriever
+    reranked_retriever = ContextualCompressionRetriever(
+        base_retriever=base_retriever,
+        base_compressor=reranker
+    )
+
+    return reranked_retriever  
 
 
 def display_database_info():
