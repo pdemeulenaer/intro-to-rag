@@ -3,7 +3,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from htmlTemplates import css, bot_template, user_template
 from utils import (
-    get_qdrant_vectorstore, 
+    # get_qdrant_vectorstore, 
     get_conversation_chain, 
     display_database_info,
     get_reranked_qdrant_retriever,

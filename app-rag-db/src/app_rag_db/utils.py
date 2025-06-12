@@ -1,9 +1,11 @@
 import os
+import yaml
 # from PyPDF2 import PdfReader
 import streamlit as st
 import pymupdf
 from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
+# from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain_community.vectorstores import Qdrant
 from huggingface_hub import InferenceClient
 from typing import List
@@ -30,7 +32,11 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CohereRerank
 
 
-
+def load_config(config_path="config.yaml"):
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f)
+    
+config = load_config()
 
 def get_pdf_text(pdf_docs):
     """
@@ -63,6 +69,7 @@ def get_text_chunks_naive(text):
     )
     chunks = text_splitter.split_text(text)
     return chunks
+
 
 def get_text_chunks_recursive(text):
     """
@@ -174,7 +181,8 @@ def format_documents(docs):
 custom_prompt_template = PromptTemplate.from_template(
     """
     You are a helpful assistant. Use only the following pieces of context to answer the question.
-    If you don't know the answer based on the context, say, you can mention this first and then, in a new paragraph, you can generate a concise answer based on your internal knowledge.
+
+    Please attempt to answer the question based on the context provided. If the context does not contain enough information to answer the question, you can mention that you don't know the answer based on the context.    
     
     --- 
     Context:
@@ -186,7 +194,7 @@ custom_prompt_template = PromptTemplate.from_template(
     Question: {question}
     Answer:
     """
-)
+)# If you don't know the answer based on the context, say, you can mention this first and then (in a new paragraph), you can generate a concise answer based on your internal knowledge.
 
 # custom_prompt_template = PromptTemplate.from_template("""
 # You are a helpful AI assistant answering questions based on context from PDF documents.
@@ -499,7 +507,7 @@ def get_qdrant_vectorstore():
     # Load environment variables
     QDRANT_URL = os.getenv("QDRANT_URL")
     QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
-    COLLECTION_NAME = os.getenv("COLLECTION_NAME", "test_collection")  # Default to test_collection
+    COLLECTION_NAME = os.getenv("COLLECTION_NAME", config["collection"]) 
     # HUGGINGFACE_API_TOKEN = os.getenv("HUGGINGFACE_API_TOKEN")
     EMBEDDING_API_URL = os.environ.get("EMBEDDING_API_URL")
     
@@ -540,14 +548,12 @@ def get_qdrant_vectorstore():
     )
     
     return retriever
-    
-    # return vectorstore
 
 
 def get_reranked_qdrant_retriever():
     QDRANT_URL = os.getenv("QDRANT_URL")
     QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
-    COLLECTION_NAME = os.getenv("COLLECTION_NAME", "test_collection")
+    COLLECTION_NAME = os.getenv("COLLECTION_NAME", config["collection"])
     EMBEDDING_API_URL = os.getenv("EMBEDDING_API_URL")
     COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 
@@ -593,7 +599,7 @@ def display_database_info():
     try:
         QDRANT_URL = os.getenv("QDRANT_URL")
         QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
-        COLLECTION_NAME = os.getenv("COLLECTION_NAME", "test_collection")
+        COLLECTION_NAME = os.getenv("COLLECTION_NAME", config["collection"])
         
         if QDRANT_URL and QDRANT_API_KEY:
             qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
