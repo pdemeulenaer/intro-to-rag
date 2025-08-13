@@ -6,6 +6,7 @@ import pymupdf
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import PointStruct, VectorParams, Distance, PayloadSchemaType
+from qdrant_client.http.models import TextIndexParams, TextIndexType
 from typing import List, Generator, Tuple, Dict
 import statistics
 from huggingface_hub import InferenceClient
@@ -144,6 +145,16 @@ def ingest_folder_to_qdrant(folder_path: str, qdrant_url: str, qdrant_api_key: s
             field_name=field,
             field_schema=PayloadSchemaType.KEYWORD
         )
+
+    # ADD THIS BLOCK to create the text index    
+    qdrant_client.create_payload_index(
+        collection_name=collection_name,
+        field_name="text",
+        field_schema=PayloadSchemaType.TEXT,
+        # field_schema=TextIndexParams(
+        #     type=TextIndexType.TEXT
+        # )
+    )     
 
     for filename in os.listdir(folder_path):
         if not filename.lower().endswith(".pdf"):
