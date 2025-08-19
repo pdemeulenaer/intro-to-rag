@@ -48,6 +48,36 @@ groq_client = instructor.from_openai(
 )
 
 
+SYSTEM_PROMPT = """
+You are a research assistant that extracts structured metadata from scientific documents.
+Your task is to generate concise, factual metadata that is directly grounded in the document text.
+Do not hallucinate information. If a field cannot be determined, leave it empty.
+"""
+
+USER_PROMPT = """
+Extract the following metadata from the provided text:
+
+- **Title**: The scientific title of the document (if present).
+- **Authors**: The main author(s) or PhD candidate.
+- **Keywords**: 5–10 scientific keywords that are explicitly present in the text,
+  or strongly implied by domain-specific terminology. Avoid generic terms like
+  'research', 'study', 'thesis'. Each keyword must be a single word or short phrase.
+
+The keywords must come from the text (or be obvious synonyms), not invented.
+
+Return only valid JSON following this schema:
+{
+  "title": string,
+  "authors": [string],
+  "keywords": [string]
+}
+
+Text to analyze:
+----------------
+{input_text}
+"""
+
+
 class AdditionalMetadata(BaseModel):
     """Structured metadata extracted from a scientific PDF."""
     title: str = Field(..., description="The title of the document")
@@ -89,13 +119,49 @@ def extract_metadata_with_llm(title_text: str, keywords_text: str, config) -> Ad
                 Extract the following fields as JSON:
                 - Title (from this text):\n{title_text[:1500]}
                 - Authors (from this text):\n{title_text[:1500]}
-                - Keywords (from this broader text, if present):\n{keywords_text[:5000]}
+                - Keywords (from this broader text, if present):\n{keywords_text[:8000]}
                 """
             }
         ],
         temperature=0,
         max_tokens=500
     )
+
+# def extract_metadata_with_llm(doc_text: str):
+#     api_key = os.getenv("GROQ_API_KEY")
+#     if not api_key:
+#         raise ValueError("GROQ_API_KEY is not set in environment variables.")
+
+#     headers = {
+#         "Authorization": f"Bearer {api_key}",
+#         "Content-Type": "application/json"
+#     }
+
+#     payload = {
+#         "model": config["groq"]["metadata_model"],
+#         "messages": [
+#             {"role": "system", "content": SYSTEM_PROMPT},
+#             {"role": "user", "content": USER_PROMPT.format(input_text=doc_text[:8000])}
+#         ],
+#         "temperature": 0,
+#         "max_tokens": 500
+#     }
+
+#     response = httpx.post("https://api.groq.com/openai/v1/chat/completions",
+#                           headers=headers, 
+#                           json=payload, 
+#                           timeout=60)
+#     response.raise_for_status()
+
+#     raw_text = response.json()["choices"][0]["message"]["content"].strip()
+
+#     try:
+#         data = json.loads(raw_text)
+#     except Exception:
+#         print(f"⚠️ Failed to parse JSON:\n{raw_text}")
+#         data = {"title": None, "authors": [], "keywords": []}
+
+#     return AdditionalMetadata(**data)
 
 
 class OpenAIEmbeddings(Embeddings):
@@ -137,6 +203,10 @@ def get_text_chunks_recursive(text) -> List[str]:
 
 # === Chunk Generator with Metadata ===
 def extract_chunks_with_metadata(filepath: str) -> Tuple[List[Tuple[str, int]], Dict[str, str]]:
+    """
+    Extract chunks of text with page numbers and collect metadata.
+    Falls back to LLM extraction if PyMuPDF metadata is incomplete.
+    """    
     chunks_with_page = []
     first_page_text, first_pages_text = "", ""
     with pymupdf.open(filepath) as doc:
@@ -201,6 +271,64 @@ def extract_chunks_with_metadata(filepath: str) -> Tuple[List[Tuple[str, int]], 
         "creation_date": creation_date,
         "year": year
     }    
+
+# def extract_chunks_with_metadata(filepath: str) -> Tuple[List[Tuple[str, int]], Dict[str, str]]:
+#     """
+#     Extract chunks of text with page numbers and collect metadata.
+#     Falls back to LLM extraction if PyMuPDF metadata is incomplete.
+#     """
+#     chunks_with_page = []
+#     with pymupdf.open(filepath) as doc:
+#         metadata = doc.metadata or {}
+#         title = metadata.get("title")
+#         authors = [metadata.get("author")] if metadata.get("author") else []
+#         keywords = metadata.get("keywords").split(",") if metadata.get("keywords") else []
+#         creation_date = metadata.get("creationDate")
+
+#         # Extract year from creationDate
+#         year = None
+#         if creation_date:
+#             try:
+#                 # Strip "D:" if present
+#                 clean_date = creation_date.lstrip("D:")
+#                 # Try parsing
+#                 dt = datetime.strptime(clean_date[:14], "%Y%m%d%H%M%S")
+#                 year = str(dt.year)
+#             except Exception:
+#                 pass        
+
+#         # Collect text for chunking
+#         for page_number, page in enumerate(doc, start=1):
+#             text = page.get_text()
+#             if not text.strip():
+#                 continue
+#             page_chunks = get_text_chunks_recursive(text)
+#             for chunk in page_chunks:
+#                 chunks_with_page.append((chunk, page_number))
+
+#         # Use the first few pages for LLM metadata extraction if needed
+#         if not title or not authors or not keywords:
+#             preview_text = "\n".join(
+#                 [doc[i].get_text() for i in range(min(10, len(doc)))]
+#             )
+#             try:
+#                 llm_meta: AdditionalMetadata = extract_metadata_with_llm(preview_text)
+#                 if not title and llm_meta.title:
+#                     title = llm_meta.title
+#                 if not authors and llm_meta.authors:
+#                     authors = llm_meta.authors
+#                 if not keywords and llm_meta.keywords:
+#                     keywords = llm_meta.keywords
+#             except Exception as e:
+#                 print(f"⚠️ Metadata extraction with Groq failed: {e}")
+
+#     return chunks_with_page, {
+#         "file_title": title,
+#         "authors": authors,
+#         "keywords": keywords,
+#         "creation_date": creation_date,
+#         "year": year
+#     }
 
 
 # === Summarization with Groq ===
